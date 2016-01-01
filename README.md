@@ -5,6 +5,22 @@ namespaces are defined in each one, and which namespaces in one
 directory of the classpath 'shadow' others.
 
 
+## Steps followed to create the files described in the next section
+
+The creation of `.class` files is not implemented right now.  These
+instructions create the `.clj` and `.cljc` files as described in the
+next section.
+
+```clojure
+(require '[cpathtest.core :as c])
+(def cpaths (mapv c/canonical-filename [ "cp1" "cp2" ]))
+(def suffs [ "clj" "cljc" ])
+
+;; Create files to test on
+(c/create-files cpaths suffs)
+```
+
+
 ## Structure of files to test many cases of .class, .clj, and .cljc files defining the same namespace
 
 There will be a separate Clojure namespace for each of the following
