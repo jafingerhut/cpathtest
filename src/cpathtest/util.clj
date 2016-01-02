@@ -6,6 +6,21 @@
         (for [[k v] m] [k (f v)])))
 
 
+(defn filter-vals [pred m]
+  (into (empty m)
+        (filter #(pred (val %)) m)))
+
+
+(defn separate-suffix
+  "Given a string s and a sequence of strings, suffixes, return a
+  vector of 2 strings [x y] where y is the first element of suffixes
+  that is a suffix of s, and (str x y)=s.  If no string in suffixes is
+  a suffix of s, return nil."
+  [s suffixes]
+  (if-let [suffix (some #(if (.endsWith s %) %) suffixes)]
+    [(subs s 0 (- (count s) (count suffix))) suffix]))
+
+
 (defn remove-prefix
   "If string s starts with the string prefix, return s with that
   prefix removed.  Otherwise, return s."
