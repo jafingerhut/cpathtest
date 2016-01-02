@@ -36,13 +36,17 @@
    (find-source-files classpath find/clj))
   ([classpath platform]
    (let [suffixes (:extensions platform)
+         suffix-idx (util/index-map suffixes)
+         classpath-idx (util/index-map classpath)
          ret-item (fn [file filename]
                     (let [[filename-sans-suffix suffix]
                           (util/separate-suffix filename suffixes)]
                       {:classpath-file file
+                       :classpath-file-idx (get classpath-idx file)
                        :filename filename
                        :resource filename-sans-suffix
-                       :extension suffix}))]
+                       :extension suffix
+                       :extension-idx (get suffix-idx suffix)}))]
      (mapcat (fn [^File file]
                (cond (.isDirectory file)
                      (let [prefix (str file File/separator)]
@@ -55,6 +59,37 @@
                           
                      :else []))
              classpath))))
+
+
+(defn group-and-sort-file-info
+  "file-info should be a sequence of maps as returned by
+  find-source-files.
+
+  Return a sequence where each item is itself a sequence of those
+  maps, referred to hereafter as a group.  Every group will have
+  identical values for the :resource key, and will be sorted in the
+  order of the key [(:extension-idx item) (:classpath-file-idx item)].
+
+  If a group has more than one file in it, the first file should be
+  the one that will be loaded via Clojure's 'require' for that
+  namespace.  The second should be the one loaded if the first one did
+  not exist, and so on.  Thus groups with more than one file in them
+  indicate namespace shadowing for the purposes of 'require'.  To get
+  only those groups, call (filter #(> (count %) 1) x) on the return
+  value x.
+
+  Any groups that only contain info about 1 file will be included in
+  the return value, but note that no shadowing occurs due to such
+  files.
+
+  To get info about only files that are first for the purposes of
+  'require', call (map first x) on the return value x."
+  [file-info]
+  (->> file-info
+       (group-by :resource)
+       vals
+       (map (fn [s]
+              (sort-by #((juxt :extension-idx :classpath-file-idx) %) s)))))
 
 
 (comment
@@ -106,12 +141,16 @@
 (def x3 (find/find-namespaces [clj17jar]))
 
 (def cp1 [(io/file "cp1") (io/file "cp2") clj17jar])
-(def sf1 (core/find-source-files cp1))
-(def gsf1 (->> sf1 (group-by :resource) (u/filter-vals #(>= (count %) 2))))
-
 (def cp2 (cp/system-classpath))
-(def sf2 (core/find-source-files cp2))
-(def gsf2 (->> sf2 (group-by :resource) (u/filter-vals #(>= (count %) 2))))
+
+(def sf (core/find-source-files cp1))
+(def sf (core/find-source-files cp2))
+
+(def gsf (core/group-and-sort-file-info sf))
+;; get info about only files with shadowing
+(def ssf (filter #(> (count %) 1) gsf))
+;; get info about all files that are first according to 'require'
+(def fsf (map first gsf))
 
 
 ;; If I want something that can search for files in both directories

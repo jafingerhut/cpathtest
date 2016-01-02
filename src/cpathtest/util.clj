@@ -11,6 +11,24 @@
         (filter #(pred (val %)) m)))
 
 
+(defn index-map
+  "Given a sequence s, return a map with keys equal to the items in s,
+  and values equal to the first index of the item within s, starting
+  with index 0 for the first item.
+
+  Example:
+
+  user=> (index-map [:a :b :c :c :d :a])
+  {:a 0, :b 1, :c 2, :d 4}"
+  [s]
+  (reduce (fn [idx-map [idx item]]
+            (if (contains? idx-map item)
+              idx-map
+              (assoc idx-map item idx)))
+          {}
+          (map-indexed (fn [idx item] [idx item]) s)))
+
+
 (defn separate-suffix
   "Given a string s and a sequence of strings, suffixes, return a
   vector of 2 strings [x y] where y is the first element of suffixes
