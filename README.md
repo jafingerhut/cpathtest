@@ -12,8 +12,9 @@ instructions create the `.clj` and `.cljc` files as described in the
 next section.
 
 ```clojure
-(require '[cpathtest.core :as c])
-(def cpaths (mapv c/canonical-filename [ "cp1" "cp2" ]))
+(require '[cpathtest.create-files :as c])
+(require '[cpathtest.util :as u])
+(def cpaths (mapv u/canonical-filename [ "cp1" "cp2" ]))
 (def suffs [ "clj" "cljc" ])
 
 ;; Create files to test on
